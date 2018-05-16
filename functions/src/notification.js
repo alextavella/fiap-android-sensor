@@ -8,22 +8,26 @@ module.exports = (params) => {
         .onRequest((req, res) => {
 
             // The topic name can be optionally prefixed with "/topics/".
-            const topic = "alert";
+            // const topic = "alert";
 
             // See the "Defining the message payload" section below for details
             // on how to define a message payload.
-            const { id, status } = req.body;
+            // const { msg } = req.body;
+
             const payload = {
-                data: {
-                    id: id,
-                    status: `${status}`
+                android: {
+                    priority: 'high',
+                },
+                notification: {
+                    title: 'Teste',
+                    body: 'Fiap'
                 }
             };
 
             // Send a message to devices subscribed to the provided topic.
             admin
                 .messaging()
-                .sendToTopic(topic, payload)
+                .send(payload)
                 .then((response) => {
                     // See the MessagingTopicResponse reference documentation for the
                     // contents of response.
