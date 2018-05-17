@@ -4,8 +4,8 @@ module.exports = () => {
     const request = require('request');
     const five = require('johnny-five');
     const _ = require('lodash');
-    // const sensors = require('./sensors');
 
+    const SENSOR_ID = '03';
     const board = new five.Board();
 
     const config = {
@@ -25,7 +25,7 @@ module.exports = () => {
     };
 
     const sendNotification = (body) => {
-        console.log(`Send notification ${body.msg}`);
+        console.log(`Enviando notificação: ${body.msg}`);
 
         const url = `${config.baseUrl}/notificaton`;
         request
@@ -45,7 +45,7 @@ module.exports = () => {
                     resolve(device);
                 })
                 .catch((err) => {
-                    console.log(err);
+                    // console.log(err);
                     reject(err);
                 });
         });
@@ -63,17 +63,17 @@ module.exports = () => {
                     resolve(result);
                 })
                 .catch((err) => {
-                    console.log(err);
+                    // console.log(err);
                     reject(err);
                 });
         });
     };
 
     const changeMotion = async (params) => {
-        const { sensor, value } = params;
+        const { sensor } = params;
 
         const device = await getDevice(sensor);
-        console.log('device', device);
+        // console.log('device', device);
 
         if (device && !device.notificated) {
 
@@ -82,12 +82,17 @@ module.exports = () => {
             device.notificated = true;
 
             editDevice(device);
+
+            return true;
         }
+
+        return false;
     };
 
     const changeStatus = (device) => {
+        console.log('Sensor habilitado?', device.status);
+
         if (device && device.status) {
-            console.log('device.status', device.status);
             sendNotification({ msg: `Sensor ${device.id} foi disparado!` });
         }
     };
@@ -102,17 +107,18 @@ module.exports = () => {
         });
 
         proximity.on("data", function () {
-            const value = Math.floor(this.cm) > 10;
-
-            // console.log("Proximity: ");
-            // console.log("  cm  : ", this.cm);
-            // console.log("  in  : ", this.in);
-            // console.log('  e   : ', value);
-            // console.log("-----------------");
+            const value = Math.floor(this.cm) < 5;
 
             if (!unique) {
-                changeMotion({ sensor: '03', value: value });
-                unique = true;
+
+                // console.log("Proximity: ");
+                // console.log("  cm  : ", this.cm);
+                // console.log("  in  : ", this.in);
+                console.log('Detectou presença?   : ', value);
+                console.log("-----------------");
+
+                if (value)
+                    unique = changeMotion({ sensor: SENSOR_ID });
             }
         });
 

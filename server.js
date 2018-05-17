@@ -3,6 +3,7 @@ const cors = require('cors');
 const router = express.Router();
 const app = express();
 
+// Sensors
 const motion = require('./src/motion')();
 
 app.use(cors());
