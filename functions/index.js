@@ -15,7 +15,7 @@ exports.hello = require('./src/hello')(config);
 exports.message = require('./src/message')(config);
 
 //https://us-central1-fiapmob-50e3b.cloudfunctions.net/notification
-// exports.notification = require('./src/notification')(config);
+exports.notification = require('./src/notification')(config);
 
 //https://us-central1-fiapmob-50e3b.cloudfunctions.net/device
 exports.device = require('./src/device')(config);
