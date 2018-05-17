@@ -1,9 +1,10 @@
 module.exports = () => {
 
+    const axios = require('axios');
     const request = require('request');
     const five = require('johnny-five');
     const _ = require('lodash');
-    const sensors = require('./sensors');
+    // const sensors = require('./sensors');
 
     const board = new five.Board();
 
@@ -33,23 +34,55 @@ module.exports = () => {
     };
 
     const getDevice = (sensor) => {
-        // console.log('sensors.data', sensors.data);
-        return _.find(sensors.data, { id: sensor });
+        return new Promise((resolve, reject) => {
+            const url = `${config.baseUrl}/device`;
+            axios
+                .get(url)
+                .then((response) => {
+                    const result = response.data;
+                    // console.log('get', result.data);
+                    const device = _.find(result.data, { id: sensor });
+                    resolve(device);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    reject(err);
+                });
+        });
     };
 
-    const changeMotion = (params) => {
+
+    const editDevice = (device) => {
+        return new Promise((resolve, reject) => {
+            const url = `${config.baseUrl}/device`;
+            axios
+                .post(url, device)
+                .then((response) => {
+                    const result = response.data;
+                    // console.log('edited', result);
+                    resolve(result);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    reject(err);
+                });
+        });
+    };
+
+    const changeMotion = async (params) => {
         const { sensor, value } = params;
-        const device = sensors.get(sensor);
+
+        const device = await getDevice(sensor);
+        console.log('device', device);
 
         if (device && !device.notificated) {
 
             changeStatus(device);
 
             device.notificated = true;
-            sensors.edit(device);
-        }
 
-        // addHistory(sensor, value);
+            editDevice(device);
+        }
     };
 
     const changeStatus = (device) => {
@@ -57,28 +90,9 @@ module.exports = () => {
             console.log('device.status', device.status);
             sendNotification({ msg: `Sensor ${device.id} foi disparado!` });
         }
-
-        // const url = `${config.baseUrl}/device`;
-        // const body = { id: sensor, status: value };
-
-        // console.log(url, body);
-        // request
-        //     .post(url)
-        //     .form(body)
-        //     .on('response', (response) => {
-        //         console.log(response.statusCode);
-        //         sendNotification(body);
-        //     });
     };
 
-    let history = [];
-    const getHistory = (sensor) => _.find(history, { sensor: sensor });
-    const addHistory = (sensor, value) => {
-        _.remove(history, { sensor: sensor });
-        history.push({ sensor: sensor, value: value });
-        // console.log(`history: ${JSON.stringify(history)}`);
-    };
-
+    let unique = false;
     board.on("ready", () => {
         console.log('------ Ready ------');
 
@@ -96,12 +110,14 @@ module.exports = () => {
             // console.log('  e   : ', value);
             // console.log("-----------------");
 
-            changeMotion({ sensor: '03', value: value });
+            if (!unique) {
+                changeMotion({ sensor: '03', value: value });
+                unique = true;
+            }
         });
 
         // proximity.on("change", function () {
         //     console.log("The obstruction has moved.");
         // });
-
     });
 }

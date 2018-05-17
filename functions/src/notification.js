@@ -1,44 +1,52 @@
 module.exports = (params) => {
     const { admin, functions } = params;
 
+    const gcm = require("node-gcm");
+
     // Take the text parameter passed to this HTTP endpoint and insert it into the
     // Realtime Database under the path /messages/:pushId/original
     return functions
         .https
         .onRequest((req, res) => {
 
-            // The topic name can be optionally prefixed with "/topics/".
-            // const topic = "alert";
+            const token = 'AAAAPuOQPxk:APA91bGV2nw7FgOYJBikYdB316_Im5tT_eHXUT2p8SV7lNu6DBIcdOvM8fUBjWx4D-GMYjooFtGZeJwzL3drVilERLTwSwagvDswYyNU-8kuNKTDbmzHO-4gyboTWPQ9pAs0kCesvIcl';
+            const sender = new gcm.Sender(token);
 
-            // See the "Defining the message payload" section below for details
-            // on how to define a message payload.
-            // const { msg } = req.body;
+            // Message of notification
+            const { msg } = req.body;
 
-            const payload = {
-                android: {
-                    priority: 'high',
-                },
+            const message = new gcm.Message({
                 notification: {
-                    title: 'Teste',
-                    body: 'Fiap'
-                }
-            };
+                    title: "Alert Me House",
+                    body: msg
+                },
+            });
 
-            // Send a message to devices subscribed to the provided topic.
-            admin
-                .messaging()
-                .send(payload)
-                .then((response) => {
-                    // See the MessagingTopicResponse reference documentation for the
-                    // contents of response.
-                    console.log("Successfully sent message:", response);
-                    return res.send(`Sent Notification ${topic} | ${JSON.stringify(payload)}`);
-                })
-                .catch((error) => {
-                    console.log("Error sending message:", error);
-                    return res.send(`Sent Notification ${JSON.stringify(error)}`);
-                })
-                ;
+            const recipients = { to: "/topics/all" };
+
+            sender.sendNoRetry(message, recipients, (err, response) => {
+                if (err) {
+                    return res.send(`Error Notification: ${err}`);
+                }
+                return res.send('Sent!');
+            });
+
+            // const payload = {
+            //     android: {
+            //         priority: 'high',
+            //     },
+            //     notification: {
+            //         title: 'Alert Me House',
+            //         body: msg
+            //     }
+            // };
+
+            // admin
+            //     .messaging()
+            //     .send(payload)
+            //     .then((response) => res.send('Sent!'))
+            //     .catch((error) => res.send(`Sent Notification ${JSON.stringify(error)}`))
+            //     ;
         })
         ;
 }
