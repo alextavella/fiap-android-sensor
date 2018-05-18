@@ -1,52 +1,29 @@
 module.exports = (params) => {
     const { admin, functions } = params;
 
-    const gcm = require("node-gcm");
-
     // Take the text parameter passed to this HTTP endpoint and insert it into the
     // Realtime Database under the path /messages/:pushId/original
     return functions
         .https
         .onRequest((req, res) => {
 
-            const token = 'AAAAPuOQPxk:APA91bGV2nw7FgOYJBikYdB316_Im5tT_eHXUT2p8SV7lNu6DBIcdOvM8fUBjWx4D-GMYjooFtGZeJwzL3drVilERLTwSwagvDswYyNU-8kuNKTDbmzHO-4gyboTWPQ9pAs0kCesvIcl';
-            const sender = new gcm.Sender(token);
-
-            // Message of notification
+            const topic = 'all';
             const { msg } = req.body;
 
-            const message = new gcm.Message({
+            const payload = {
+                topic: topic,
                 notification: {
-                    title: "Alert Me House",
+                    title: 'Alert Me House',
                     body: msg
-                },
-            });
-
-            const recipients = { to: "/topics/all" };
-
-            sender.sendNoRetry(message, recipients, (err, response) => {
-                if (err) {
-                    return res.send(`Error Notification: ${err}`);
                 }
-                return res.send('Sent!');
-            });
+            };
 
-            // const payload = {
-            //     android: {
-            //         priority: 'high',
-            //     },
-            //     notification: {
-            //         title: 'Alert Me House',
-            //         body: msg
-            //     }
-            // };
-
-            // admin
-            //     .messaging()
-            //     .send(payload)
-            //     .then((response) => res.send('Sent!'))
-            //     .catch((error) => res.send(`Sent Notification ${JSON.stringify(error)}`))
-            //     ;
+            admin
+                .messaging()
+                .send(payload)
+                .then((response) => res.send('Sent by Push!'))
+                .catch((error) => res.send(`Error Notification ${error}`))
+                ;
         })
         ;
 }

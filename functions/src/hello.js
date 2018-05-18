@@ -7,6 +7,11 @@ module.exports = (params) => {
         .https
         .onRequest((req, res) => {
             const method = req.method.toUpperCase();
-            res.send(`Hello from Firebase! ${method}`);
+            const { msg } = req.body || 'Firebase';
+            res.send(`Hello from ${msg}! 
+                method: ${method} 
+                body:${JSON.stringify(req.body)} 
+                params:${JSON.stringify(req.params)} 
+                query:${JSON.stringify(req.query)}`);
         });
 }
